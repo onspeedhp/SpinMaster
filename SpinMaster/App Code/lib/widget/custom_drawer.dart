@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:wheeler/screens/leaderboard_page.dart';
 import 'package:wheeler/services/solana_service.dart';
 import 'package:wheeler/services/auth_api.dart';
+import 'package:wheeler/utils/ui_utils.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -263,22 +264,20 @@ class CustomDrawer extends StatelessWidget {
 
                 Future.delayed(const Duration(milliseconds: 500), () {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Logged out successfully'),
-                        backgroundColor: Colors.green,
-                      ),
+                    UIUtils.showMessageDialog(
+                      context,
+                      title: 'Logout',
+                      message: 'Logged out successfully',
                     );
                   }
                 });
               } catch (e) {
                 if (Navigator.canPop(context)) Navigator.pop(context);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Logout failed: $e'),
-                      backgroundColor: Colors.red,
-                    ),
+                  UIUtils.showMessageDialog(
+                    context,
+                    title: 'Status',
+                    message: 'Logout failed: $e',
                   );
                 }
               }

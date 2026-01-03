@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/mission.dart';
 import '../services/mission_service.dart';
+import 'package:wheeler/utils/ui_utils.dart';
 import '../services/wheel_manage.dart';
 
 /// Widget to display missions list
@@ -117,13 +118,10 @@ class MissionsCard extends StatelessWidget {
                       if (reward > 0) {
                         wheelProvider.addSpins(reward);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '🎉 Mission completed! +$reward spins',
-                              ),
-                              backgroundColor: Colors.green,
-                            ),
+                          UIUtils.showMessageDialog(
+                            context,
+                            title: 'Mission Reward',
+                            message: 'Claimed ${mission.rewardSpins} spins!',
                           );
                         }
                       }

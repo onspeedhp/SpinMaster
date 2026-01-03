@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wheeler/widget/custom_drawer.dart';
 import 'package:wheeler/widget/wheel_card.dart';
 import 'package:wheeler/services/wheel_manage.dart';
+import 'package:wheeler/utils/ui_utils.dart'; // Consolidated to a single import
 import '../services/solana_service.dart';
 import '../services/mission_service.dart';
 import '../services/leaderboard_service.dart';
@@ -340,11 +341,11 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
         // User cancelled or failed to sign
         if (context.mounted) {
           Navigator.pop(context); // Hide loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Transaction cancelled'),
-              backgroundColor: Colors.orange,
-            ),
+          UIUtils.showMessageDialog(
+            context,
+            title: 'Payment Cancelled',
+            message: 'You cancelled the transaction.',
+            isError: true,
           );
         }
         return;
@@ -364,11 +365,11 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
         Navigator.pop(context); // Hide loading
 
         if (result.containsKey('error')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Verification failed: ${result['error']}'),
-              backgroundColor: Colors.red,
-            ),
+          UIUtils.showMessageDialog(
+            context,
+            title: 'Payment Error',
+            message: 'Verification failed: ${result['error']}',
+            isError: true,
           );
         } else {
           // Success!
@@ -379,11 +380,10 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
             provider.setBalanceAfterSpin(result['spinsBalance']);
           }
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Successfully purchased $spins spins!'),
-              backgroundColor: Colors.green,
-            ),
+          UIUtils.showMessageDialog(
+            context,
+            title: 'Success',
+            message: 'Successfully purchased $spins spins!',
           );
         }
       }
@@ -391,8 +391,11 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
       debugPrint('Purchase error: $e');
       if (context.mounted) {
         Navigator.pop(context); // Hide loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        UIUtils.showMessageDialog(
+          context,
+          title: 'Error',
+          message: 'An error occurred: $e',
+          isError: true,
         );
       }
     }
@@ -809,11 +812,11 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
                                 'Spin: Backend error - ${result['error']}',
                               );
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(result['error']),
-                                    backgroundColor: Colors.red,
-                                  ),
+                                UIUtils.showMessageDialog(
+                                  context,
+                                  title: 'Spin Error',
+                                  message: result['error'],
+                                  isError: true,
                                 );
                               }
                               return -1; // Abort
@@ -832,13 +835,12 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
                           } catch (e) {
                             debugPrint('Spin: Failed to execute spin - $e');
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
+                              UIUtils.showMessageDialog(
+                                context,
+                                title: 'Connection Error',
+                                message:
                                     'Failed to connect to server. Check your internet.',
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
+                                isError: true,
                               );
                             }
                             return -1; // Abort
@@ -902,11 +904,10 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
                                     setState(() {
                                       spinHistory.clear();
                                     });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('History cleared'),
-                                        duration: Duration(seconds: 1),
-                                      ),
+                                    UIUtils.showMessageDialog(
+                                      context,
+                                      title: 'Success',
+                                      message: 'History cleared',
                                     );
                                   },
                                   child: Container(

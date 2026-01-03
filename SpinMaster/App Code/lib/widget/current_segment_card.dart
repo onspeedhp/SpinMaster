@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:wheeler/utils/ui_utils.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
 import 'package:wheeler/model/spinner_segment_model.dart';
@@ -217,9 +218,10 @@ class _CurrentSegmentCardState extends State<CurrentSegmentCard> {
                     Slider(
                       value: selectedFontSize.roundToDouble(),
                       min: 12,
-                      max: 25 ,
-                      onChanged: (value) =>
-                          dialogSetState(() => selectedFontSize = value.round()),
+                      max: 25,
+                      onChanged: (value) => dialogSetState(
+                        () => selectedFontSize = value.round(),
+                      ),
                     ),
                     SizedBox(height: 16),
 
@@ -394,21 +396,21 @@ class _CurrentSegmentCardState extends State<CurrentSegmentCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit,color: Colors.blue.shade800,),
+                    icon: Icon(Icons.edit, color: Colors.blue.shade800),
                     onPressed: () =>
                         _showSegmentDialog(index: index, segment: segment),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete,color: Colors.blue.shade800,),
+                    icon: Icon(Icons.delete, color: Colors.blue.shade800),
                     onPressed: () {
                       if (widget.currentWheel.segments.length <= 2) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('At least 2 segments are required'),
-                            duration: Duration(seconds: 2),
-                          ),
+                        UIUtils.showMessageDialog(
+                          context,
+                          title: 'Required',
+                          message: 'At least 2 segments are required',
+                          isError: true,
                         );
-                        return;   // abort deletion
+                        return; // abort deletion
                       }
                       final updatedSegments = List<SpinnerSegment>.from(
                         widget.currentWheel.segments,
@@ -436,11 +438,11 @@ class _CurrentSegmentCardState extends State<CurrentSegmentCard> {
                   ),
                   onPressed: () {
                     if (widget.currentWheel.segments.length >= 12) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Maximum limit of 12 segments reached'),
-                          duration: Duration(seconds: 2),
-                        ),
+                      UIUtils.showMessageDialog(
+                        context,
+                        title: 'Limit reached',
+                        message: 'Maximum 12 segments allowed',
+                        isError: true,
                       );
                     } else {
                       _showSegmentDialog();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/daily_spin_service.dart';
+import 'package:wheeler/utils/ui_utils.dart';
 import '../services/wheel_manage.dart';
 import '../services/mission_service.dart';
 
@@ -155,12 +156,11 @@ class DailyFreeSpinCard extends StatelessWidget {
             wheelProvider.addSpins(1);
             await missionService.recordDailyFreeClaim();
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('🎉 Daily free spin claimed! +1 spin added'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
+              UIUtils.showMessageDialog(
+                context,
+                title: 'Success!',
+                message: '🎉 Daily free spin claimed! +1 spin added',
+                isError: false,
               );
             }
           }

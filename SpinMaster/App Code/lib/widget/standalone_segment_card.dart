@@ -4,7 +4,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import '../model/spinner_segment_model.dart'; // <-- Your model
+import '../model/spinner_segment_model.dart';
+import 'package:wheeler/utils/ui_utils.dart';
 
 class StandaloneSegmentCard extends StatefulWidget {
   final List<SpinnerSegment> segments;
@@ -33,7 +34,9 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
         final appDir = await getApplicationDocumentsDirectory();
         final fileName =
             '${DateTime.now().millisecondsSinceEpoch}${path.extension(pickedFile.path)}';
-        final savedImage = await File(pickedFile.path).copy('${appDir.path}/$fileName');
+        final savedImage = await File(
+          pickedFile.path,
+        ).copy('${appDir.path}/$fileName');
         return savedImage.path;
       }
     } catch (e) {
@@ -64,7 +67,10 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
             return AlertDialog(
               title: Text(isEditing ? 'Edit Segment' : 'Add New Segment'),
               contentPadding: const EdgeInsets.all(20),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 24,
+              ),
               content: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.9,
                 child: SingleChildScrollView(
@@ -84,7 +90,10 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                       const SizedBox(height: 16),
 
                       // Background Color
-                      const Text('Background Color:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Background Color:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       GestureDetector(
                         onTap: () async {
@@ -103,16 +112,19 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, selectedColor),
+                                  onPressed: () =>
+                                      Navigator.pop(context, selectedColor),
                                   child: const Text('OK'),
                                 ),
                               ],
                             ),
                           );
-                          if (picked != null) dialogSetState(() => selectedColor = picked);
+                          if (picked != null)
+                            dialogSetState(() => selectedColor = picked);
                         },
                         child: Container(
-                          width: 40, height: 40,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
                             color: selectedColor,
                             shape: BoxShape.circle,
@@ -123,66 +135,104 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                       const SizedBox(height: 16),
 
                       // Background Image
-                      const Text('Background Image:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Background Image:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           if (backgroundImagePath != null)
-                            CircleAvatar(radius: 20, backgroundImage: FileImage(File(backgroundImagePath!))),
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: FileImage(
+                                File(backgroundImagePath!),
+                              ),
+                            ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: Icon(backgroundImagePath != null ? Icons.edit : Icons.image),
+                            icon: Icon(
+                              backgroundImagePath != null
+                                  ? Icons.edit
+                                  : Icons.image,
+                            ),
                             onPressed: () async {
                               final path = await _pickImage();
-                              if (path != null) dialogSetState(() => backgroundImagePath = path);
+                              if (path != null)
+                                dialogSetState(
+                                  () => backgroundImagePath = path,
+                                );
                             },
                           ),
                           if (backgroundImagePath != null)
                             IconButton(
                               icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () => dialogSetState(() => backgroundImagePath = null),
+                              onPressed: () => dialogSetState(
+                                () => backgroundImagePath = null,
+                              ),
                             ),
                         ],
                       ),
                       const SizedBox(height: 16),
 
                       // Center Image
-                      const Text('Center Image:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Center Image:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           if (centerImagePath != null)
-                            CircleAvatar(radius: 20, backgroundImage: FileImage(File(centerImagePath!))),
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: FileImage(
+                                File(centerImagePath!),
+                              ),
+                            ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: Icon(centerImagePath != null ? Icons.edit : Icons.image),
+                            icon: Icon(
+                              centerImagePath != null
+                                  ? Icons.edit
+                                  : Icons.image,
+                            ),
                             onPressed: () async {
                               final path = await _pickImage();
-                              if (path != null) dialogSetState(() => centerImagePath = path);
+                              if (path != null)
+                                dialogSetState(() => centerImagePath = path);
                             },
                           ),
                           if (centerImagePath != null)
                             IconButton(
                               icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () => dialogSetState(() => centerImagePath = null),
+                              onPressed: () =>
+                                  dialogSetState(() => centerImagePath = null),
                             ),
                         ],
                       ),
                       const SizedBox(height: 16),
 
                       // Font Size
-                      Text('Font Size: $selectedFontSize', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Font Size: $selectedFontSize',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       Slider(
                         value: selectedFontSize.toDouble(),
                         min: 12,
                         max: 25,
                         divisions: 13,
-                        onChanged: (v) => dialogSetState(() => selectedFontSize = v.round()),
+                        onChanged: (v) =>
+                            dialogSetState(() => selectedFontSize = v.round()),
                       ),
                       const SizedBox(height: 16),
 
                       // Text Color
-                      const Text('Text Color:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Text Color:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       GestureDetector(
                         onTap: () async {
@@ -201,16 +251,19 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, selectedTextColor),
+                                  onPressed: () =>
+                                      Navigator.pop(context, selectedTextColor),
                                   child: const Text('OK'),
                                 ),
                               ],
                             ),
                           );
-                          if (picked != null) dialogSetState(() => selectedTextColor = picked);
+                          if (picked != null)
+                            dialogSetState(() => selectedTextColor = picked);
                         },
                         child: Container(
-                          width: 40, height: 40,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
                             color: selectedTextColor,
                             shape: BoxShape.circle,
@@ -221,7 +274,10 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                       const SizedBox(height: 16),
 
                       // Stroke Color
-                      const Text('Stroke Color:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Stroke Color:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       GestureDetector(
                         onTap: () async {
@@ -232,7 +288,8 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                               content: SingleChildScrollView(
                                 child: ColorPicker(
                                   pickerColor: selectedStrokeColor,
-                                  onColorChanged: (c) => selectedStrokeColor = c,
+                                  onColorChanged: (c) =>
+                                      selectedStrokeColor = c,
                                   enableAlpha: false,
                                   showLabel: false,
                                   paletteType: PaletteType.hsv,
@@ -240,16 +297,21 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, selectedStrokeColor),
+                                  onPressed: () => Navigator.pop(
+                                    context,
+                                    selectedStrokeColor,
+                                  ),
                                   child: const Text('OK'),
                                 ),
                               ],
                             ),
                           );
-                          if (picked != null) dialogSetState(() => selectedStrokeColor = picked);
+                          if (picked != null)
+                            dialogSetState(() => selectedStrokeColor = picked);
                         },
                         child: Container(
-                          width: 40, height: 40,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
                             color: selectedStrokeColor,
                             shape: BoxShape.circle,
@@ -262,12 +324,18 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     if (textController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Segment text is required')),
+                      UIUtils.showMessageDialog(
+                        context,
+                        title: 'Required',
+                        message: 'Segment text is required',
+                        isError: true,
                       );
                       return;
                     }
@@ -304,8 +372,11 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
 
   void _deleteSegment(int index) {
     if (widget.segments.length <= 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('At least 2 segments are required')),
+      UIUtils.showMessageDialog(
+        context,
+        title: 'Limit reached',
+        message: 'At least 2 segments are required',
+        isError: true,
       );
       return;
     }
@@ -325,10 +396,7 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
             final index = entry.key;
             final segment = entry.value;
             return ListTile(
-              leading: CircleAvatar(
-                backgroundColor: segment.color,
-                radius: 16,
-              ),
+              leading: CircleAvatar(backgroundColor: segment.color, radius: 16),
               title: Text(
                 segment.text,
                 style: TextStyle(
@@ -342,7 +410,8 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () => _showSegmentDialog(index: index, segment: segment),
+                    onPressed: () =>
+                        _showSegmentDialog(index: index, segment: segment),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
@@ -362,8 +431,11 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                 ElevatedButton.icon(
                   onPressed: () {
                     if (widget.segments.length >= 12) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Maximum 12 segments allowed')),
+                      UIUtils.showMessageDialog(
+                        context,
+                        title: 'Limit reached',
+                        message: 'Maximum 12 segments allowed',
+                        isError: true,
                       );
                       return;
                     }
@@ -374,7 +446,9 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade700,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
                 Text(

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../services/solana_service.dart';
 import 'spinner_home_page.dart';
+import '../utils/ui_utils.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -28,18 +29,22 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to connect wallet. Please try again.'),
-            ),
+          UIUtils.showMessageDialog(
+            context,
+            title: 'Connect Wallet Error',
+            message: 'Failed to connect wallet. Please try again.',
+            isError: true,
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        UIUtils.showMessageDialog(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          title: 'Error',
+          message: 'An error occurred: $e',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -139,8 +144,10 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () async {
                       await context.read<SolanaService>().deauthorize();
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Dev: Wallet Disconnected')),
+                        UIUtils.showMessageDialog(
+                          context,
+                          title: 'Dev Info',
+                          message: 'Dev: Wallet Disconnected',
                         );
                       }
                     },
