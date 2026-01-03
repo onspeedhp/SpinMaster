@@ -10,6 +10,7 @@ import '../services/leaderboard_service.dart';
 import '../widget/daily_free_spin_card.dart';
 import '../services/spin_api.dart';
 import '../services/purchase_api.dart';
+import '../services/daily_spin_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class SpinnerHomePage extends StatefulWidget {
@@ -23,12 +24,18 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
   List<Map<String, dynamic>> spinHistory = [];
   bool _isLoadingHistory = true;
   int _historyPage = 0;
-  final int _itemsPerPage = 10;
+  final int _itemsPerPage = 7;
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    _syncServices();
+  }
+
+  void _syncServices() {
+    // Sync daily spin status with backend
+    Provider.of<DailySpinService>(context, listen: false).syncWithBackend();
   }
 
   Future<void> _loadHistory() async {
@@ -334,6 +341,7 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
       }
 
       // 2. Perform SOL Transfer
+      if (!mounted) return;
       final solanaService = Provider.of<SolanaService>(context, listen: false);
       final signature = await solanaService.transferSol(treasuryWallet, price);
 
@@ -534,16 +542,16 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
         if (currentWheel == null) {
           return Scaffold(
             appBar: AppBar(
-              title: Text('Spin Master'),
+              title: const Text('Spin Master'),
               backgroundColor: Colors.blue[800],
               foregroundColor: Colors.white,
             ),
-            body: Center(child: Text('No wheels available')),
+            body: const Center(child: Text('No wheels available')),
           );
         }
 
         return Scaffold(
-          extendBodyBehindAppBar: true, // Allow body to go behind app bar
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
             title: const Text(
               'SEEKSPIN',
@@ -561,12 +569,11 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
                 ],
               ),
             ),
-            backgroundColor: Colors.transparent, // Transparent for gradient
+            backgroundColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
             foregroundColor: const Color(0xFFF48FB1),
             actions: [
-              // Wallet Info
               Consumer<SolanaService>(
                 builder: (context, solanaService, _) {
                   final address = solanaService.state.address;
@@ -622,489 +629,531 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
               ),
             ],
           ),
-
           drawer: CustomDrawer(),
           body: Container(
-            // Premium Dark Gradient Background
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF1a1a2e), // Deep Navy/Purple
-                  Color(0xFF000000), // Pure Black
+                  Color(0xFF1a1a2e),
+                  Color(0xFF000000),
+                  Color(0xFF16213e),
                 ],
-                stops: [0.0, 0.6],
               ),
             ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 10),
-
-                    // Spins Balance Card (Premium Style)
-                    Container(
-                      margin: EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 20,
-                      ),
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF16213e).withValues(alpha: 0.9),
-                            const Color(0xFF1a1a2e).withValues(alpha: 0.9),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: const Color(0xFFF48FB1).withValues(alpha: 0.5),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFF48FB1,
-                            ).withValues(alpha: 0.2),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 100,
+                  left: -50,
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFF48FB1).withValues(alpha: 0.03),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 200,
+                  right: -80,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFF48FB1).withValues(alpha: 0.04),
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.bolt,
-                                    color: Colors.amber,
-                                    size: 16,
+                              const SizedBox(height: 10),
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 20,
+                                ),
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(
+                                        0xFF16213e,
+                                      ).withValues(alpha: 0.9),
+                                      const Color(
+                                        0xFF1a1a2e,
+                                      ).withValues(alpha: 0.9),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'AVAILABLE SPINS',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1,
-                                    ),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: const Color(
+                                      0xFFF48FB1,
+                                    ).withValues(alpha: 0.5),
+                                    width: 1.5,
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                '${wheelProvider.spinsBalance}',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w900,
-                                  shadows: [
+                                  boxShadow: [
                                     BoxShadow(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      blurRadius: 10,
+                                      color: const Color(
+                                        0xFFF48FB1,
+                                      ).withValues(alpha: 0.2),
+                                      blurRadius: 15,
+                                      spreadRadius: 1,
                                     ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Row(
+                                          children: [
+                                            Icon(
+                                              Icons.bolt,
+                                              color: Colors.amber,
+                                              size: 16,
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'AVAILABLE SPINS',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${wheelProvider.spinsBalance}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 36,
+                                            fontWeight: FontWeight.w900,
+                                            shadows: [
+                                              BoxShadow(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.5,
+                                                ),
+                                                blurRadius: 10,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(30),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(
+                                              0xFFF48FB1,
+                                            ).withValues(alpha: 0.4),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          _showShopDialog(
+                                            dialogContext: context,
+                                            provider: wheelProvider,
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFF48FB1,
+                                          ),
+                                          foregroundColor: Colors.black,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                          elevation: 0,
+                                        ),
+                                        child: const Row(
+                                          children: [
+                                            Icon(
+                                              Icons.add_circle_outline,
+                                              size: 18,
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'GET SPINS',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0,
+                                ),
+                                child: const DailyFreeSpinCard(),
+                              ),
+                              const SizedBox(height: 20),
+                              WheelCard(
+                                segments: currentWheel.segments,
+                                wheelName: currentWheel.name,
+                                onSpinComplete: (result, color) {
+                                  _addToHistory(result, color);
+                                  Provider.of<MissionService>(
+                                    context,
+                                    listen: false,
+                                  ).recordSpin();
+                                  Provider.of<LeaderboardService>(
+                                    context,
+                                    listen: false,
+                                  ).recordSpin(rewardValue: 10);
+                                },
+                                onSpinRequest: () async {
+                                  final isOfficial =
+                                      wheelProvider.currentWheel?.id ==
+                                      'seek_spin_official';
+                                  if (isOfficial) {
+                                    try {
+                                      final result =
+                                          await SpinApi.executeSpin();
+                                      if (result.containsKey('error')) {
+                                        if (context.mounted) {
+                                          UIUtils.showMessageDialog(
+                                            context,
+                                            title: 'Spin Error',
+                                            message: result['error'],
+                                            isError: true,
+                                          );
+                                        }
+                                        return -1;
+                                      }
+                                      final int targetIndex =
+                                          result['result']['index'];
+                                      final int newBalance =
+                                          result['spinsBalance'];
+                                      wheelProvider.setBalanceAfterSpin(
+                                        newBalance,
+                                      );
+                                      return targetIndex;
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        UIUtils.showMessageDialog(
+                                          context,
+                                          title: 'Connection Error',
+                                          message:
+                                              'Failed to connect to server.',
+                                          isError: true,
+                                        );
+                                      }
+                                      return -1;
+                                    }
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              Container(
+                                margin: const EdgeInsets.only(
+                                  bottom: 30,
+                                  left: 16,
+                                  right: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF16213e,
+                                  ).withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                    width: 1,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.only(
+                                  left: 24.0,
+                                  right: 24.0,
+                                  top: 24.0,
+                                  bottom: 4.0,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Row(
+                                          children: [
+                                            Icon(
+                                              Icons.history,
+                                              color: Color(0xFFF48FB1),
+                                              size: 20,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              'RECENT HISTORY',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                                letterSpacing: 1.2,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        if (spinHistory.isNotEmpty)
+                                          GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                spinHistory.clear();
+                                              });
+                                              UIUtils.showMessageDialog(
+                                                context,
+                                                title: 'Success',
+                                                message: 'History cleared',
+                                              );
+                                            },
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: const Text(
+                                                'CLEAR',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.white70,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    if (_isLoadingHistory)
+                                      const Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.all(32.0),
+                                          child: CircularProgressIndicator(
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFFF48FB1),
+                                                ),
+                                          ),
+                                        ),
+                                      )
+                                    else if (spinHistory.isEmpty)
+                                      Container(
+                                        height: 100,
+                                        alignment: Alignment.center,
+                                        child: const Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.casino_outlined,
+                                              size: 32,
+                                              color: Colors.white24,
+                                            ),
+                                            SizedBox(height: 8),
+                                            Text(
+                                              'Spin to make history!',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white38,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    else ...[
+                                      ListView.separated(
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        shrinkWrap: true,
+                                        itemCount:
+                                            (spinHistory.length -
+                                                    (_historyPage *
+                                                        _itemsPerPage))
+                                                .clamp(0, _itemsPerPage),
+                                        separatorBuilder: (context, index) =>
+                                            const SizedBox(height: 8),
+                                        itemBuilder: (context, index) {
+                                          final int itemIndex =
+                                              (_historyPage * _itemsPerPage) +
+                                              index;
+                                          if (itemIndex >= spinHistory.length) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          final item = spinHistory[itemIndex];
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.05,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.05,
+                                                ),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  width: 32,
+                                                  height: 32,
+                                                  decoration: BoxDecoration(
+                                                    color: item['color']
+                                                        .withValues(alpha: 0.2),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Center(
+                                                    child: Icon(
+                                                      Icons.star,
+                                                      size: 16,
+                                                      color: item['color'],
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Text(
+                                                    item['result'],
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black26,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    timeago.format(
+                                                      item['timestamp'],
+                                                      locale: 'en_short',
+                                                    ),
+                                                    style: const TextStyle(
+                                                      color: Colors.white54,
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.chevron_left,
+                                              color: Colors.white,
+                                            ),
+                                            onPressed: _historyPage > 0
+                                                ? () {
+                                                    setState(() {
+                                                      _historyPage--;
+                                                    });
+                                                  }
+                                                : null,
+                                          ),
+                                          Text(
+                                            '${_historyPage + 1} / ${((spinHistory.length - 1) / _itemsPerPage).floor() + 1}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.chevron_right,
+                                              color: Colors.white,
+                                            ),
+                                            onPressed:
+                                                (_historyPage + 1) *
+                                                        _itemsPerPage <
+                                                    spinHistory.length
+                                                ? () {
+                                                    setState(() {
+                                                      _historyPage++;
+                                                    });
+                                                  }
+                                                : null,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFFF48FB1,
-                                  ).withValues(alpha: 0.4),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                _showShopDialog(
-                                  dialogContext: context,
-                                  provider: wheelProvider,
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFF48FB1),
-                                foregroundColor: Colors.black,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.add_circle_outline, size: 18),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'GET SPINS',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Daily Free Spin Card (Wrapped to fit theme if needed, but keeping logic)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: const DailyFreeSpinCard(),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // THE WHEEL
-                    WheelCard(
-                      segments: currentWheel.segments,
-                      wheelName: currentWheel.name,
-                      onSpinComplete: (result, color) {
-                        _addToHistory(result, color);
-                        // Track spin for missions
-                        Provider.of<MissionService>(
-                          context,
-                          listen: false,
-                        ).recordSpin();
-                        // Track for leaderboard
-                        Provider.of<LeaderboardService>(
-                          context,
-                          listen: false,
-                        ).recordSpin(rewardValue: 10); // Mock reward value
-                      },
-                      onSpinRequest: () async {
-                        // Check if it's the official wheel (ID: seek_spin_official)
-                        final isOfficial =
-                            wheelProvider.currentWheel?.id ==
-                            'seek_spin_official';
-
-                        if (isOfficial) {
-                          try {
-                            debugPrint(
-                              'Spin: Official wheel detected, calling backend...',
-                            );
-                            final result = await SpinApi.executeSpin();
-
-                            if (result.containsKey('error')) {
-                              debugPrint(
-                                'Spin: Backend error - ${result['error']}',
-                              );
-                              if (context.mounted) {
-                                UIUtils.showMessageDialog(
-                                  context,
-                                  title: 'Spin Error',
-                                  message: result['error'],
-                                  isError: true,
-                                );
-                              }
-                              return -1; // Abort
-                            }
-
-                            final int targetIndex = result['result']['index'];
-                            final int newBalance = result['spinsBalance'];
-
-                            // Update balance immediately for UI
-                            wheelProvider.setBalanceAfterSpin(newBalance);
-
-                            debugPrint(
-                              'Spin: Server selected segment $targetIndex. Starting animation...',
-                            );
-                            return targetIndex;
-                          } catch (e) {
-                            debugPrint('Spin: Failed to execute spin - $e');
-                            if (context.mounted) {
-                              UIUtils.showMessageDialog(
-                                context,
-                                title: 'Connection Error',
-                                message:
-                                    'Failed to connect to server. Check your internet.',
-                                isError: true,
-                              );
-                            }
-                            return -1; // Abort
-                          }
-                        }
-
-                        return null; // For custom wheels, land on random segment
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Results Section
-                    Container(
-                      margin: const EdgeInsets.only(
-                        bottom: 30,
-                        left: 16,
-                        right: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF16213e).withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          width: 1,
                         ),
                       ),
-                      padding: const EdgeInsets.only(
-                        left: 24.0,
-                        right: 24.0,
-                        top: 24.0,
-                        bottom: 4.0, // Reduced bottom padding
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.history,
-                                    color: Color(0xFFF48FB1),
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  const Text(
-                                    'RECENT HISTORY',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (spinHistory.isNotEmpty)
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      spinHistory.clear();
-                                    });
-                                    UIUtils.showMessageDialog(
-                                      context,
-                                      title: 'Success',
-                                      message: 'History cleared',
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      'CLEAR',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white70,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          if (_isLoadingHistory)
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(32.0),
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFFF48FB1),
-                                  ),
-                                ),
-                              ),
-                            )
-                          else if (spinHistory.isEmpty)
-                            Container(
-                              height: 100, // Reduced height for empty state
-                              alignment: Alignment.center,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.casino_outlined,
-                                    size: 32, // Smaller icon
-                                    color: Colors.white24,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Spin to make history!',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white38,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else ...[
-                            ListView.separated(
-                              physics: const NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              itemCount:
-                                  (spinHistory.length -
-                                          (_historyPage * _itemsPerPage))
-                                      .clamp(0, _itemsPerPage),
-                              separatorBuilder: (context, index) =>
-                                  const SizedBox(height: 8),
-                              itemBuilder: (context, index) {
-                                final int itemIndex =
-                                    (_historyPage * _itemsPerPage) + index;
-                                if (itemIndex >= spinHistory.length) {
-                                  return const SizedBox.shrink();
-                                }
-                                final item = spinHistory[itemIndex];
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.05),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.05,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 32,
-                                        height: 32,
-                                        decoration: BoxDecoration(
-                                          color: item['color'].withValues(
-                                            alpha: 0.2,
-                                          ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: Icon(
-                                            Icons.star,
-                                            size: 16,
-                                            color: item['color'],
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          item['result'],
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black26,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          timeago.format(
-                                            item['timestamp'],
-                                            locale: 'en_short',
-                                          ),
-                                          style: const TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.chevron_left,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: _historyPage > 0
-                                      ? () {
-                                          setState(() {
-                                            _historyPage--;
-                                          });
-                                        }
-                                      : null,
-                                ),
-                                Text(
-                                  '${_historyPage + 1} / ${((spinHistory.length - 1) / _itemsPerPage).floor() + 1}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.chevron_right,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed:
-                                      (_historyPage + 1) * _itemsPerPage <
-                                          spinHistory.length
-                                      ? () {
-                                          setState(() {
-                                            _historyPage++;
-                                          });
-                                        }
-                                      : null,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         );

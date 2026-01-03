@@ -5,7 +5,8 @@ import 'package:wheeler/utils/ui_utils.dart';
 import '../services/wheel_manage.dart';
 import '../services/mission_service.dart';
 
-/// Widget displaying daily free spin button with countdown
+/// Widget displaying daily free spin button with countdown in premium style
+/// Optimized for minimum height as requested.
 class DailyFreeSpinCard extends StatelessWidget {
   const DailyFreeSpinCard({super.key});
 
@@ -17,86 +18,74 @@ class DailyFreeSpinCard extends StatelessWidget {
         final isAvailable = status.isAvailable;
 
         return Container(
-          // Removed horizontal margin to match parent alignment (handled by parent padding)
-          margin: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 20),
           decoration: BoxDecoration(
             gradient: isAvailable
                 ? const LinearGradient(
-                    colors: [
-                      Color(0xFF2E0C1A), // Darker Pink/Purple
-                      Color(0xFF1a1a2e),
-                    ],
+                    colors: [Color(0xFF2E0C1A), Color(0xFF1a1a2e)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : const LinearGradient(
-                    colors: [Color(0xFF121212), Color(0xFF0d0d16)],
+                    colors: [Color(0xFF111111), Color(0xFF0d0d16)],
                   ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isAvailable
-                  ? const Color(0xFFF48FB1).withValues(alpha: 0.5)
+                  ? const Color(0xFFF48FB1).withValues(alpha: 0.4)
                   : Colors.white.withValues(alpha: 0.1),
-              width: 1.5,
+              width: 1,
             ),
-            boxShadow: [
-              if (isAvailable)
-                BoxShadow(
-                  color: const Color(0xFFF48FB1).withValues(alpha: 0.15),
-                  blurRadius: 15,
-                  spreadRadius: 1,
-                ),
-            ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Header Section
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Row(
                   children: [
+                    // Small Icon
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
+                        gradient: isAvailable
+                            ? const LinearGradient(
+                                colors: [Color(0xFFF48FB1), Color(0xFFAD1457)],
+                              )
+                            : null,
                         color: isAvailable
-                            ? const Color(0xFFF48FB1).withValues(alpha: 0.2)
+                            ? null
                             : Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         isAvailable
-                            ? Icons.card_giftcard
-                            : Icons.timer_outlined,
-                        color: isAvailable
-                            ? const Color(0xFFF48FB1)
-                            : Colors.grey,
+                            ? Icons.card_giftcard_rounded
+                            : Icons.timer_rounded,
+                        color: Colors.white,
                         size: 20,
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Expanded Text Content
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            isAvailable ? 'DAILY GIFT' : 'COOLDOWN ACTIVE',
+                            isAvailable ? 'DAILY GIFT' : 'COOLDOWN',
                             style: TextStyle(
                               color: isAvailable
                                   ? const Color(0xFFF48FB1)
-                                  : Colors.white70,
+                                  : Colors.white38,
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w900,
                               letterSpacing: 2,
                             ),
                           ),
-                          const SizedBox(height: 2),
                           Text(
-                            isAvailable
-                                ? 'Claim your free spin!'
-                                : 'Next reward unlocks in...',
+                            isAvailable ? 'Claim Free Spin!' : 'Next Reward In',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -106,34 +95,25 @@ class DailyFreeSpinCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    // Countdown directly in the row if not available
+                    if (!isAvailable)
+                      _buildCompactCountdown(
+                        dailySpinService.getCountdownString(),
+                      ),
                   ],
                 ),
               ),
-
-              // Action / Timer Section
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
+              // Only show the separate action section in a very compact way if available
+              if (isAvailable)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: _buildClaimButton(
+                    context,
+                    dailySpinService,
+                    wheelProvider,
+                    missionService,
                   ),
                 ),
-                child: isAvailable
-                    ? _buildClaimButton(
-                        context,
-                        dailySpinService,
-                        wheelProvider,
-                        missionService,
-                      )
-                    : _buildCountdownDisplay(
-                        dailySpinService.getCountdownString(),
-                      ),
-              ),
             ],
           ),
         );
@@ -149,6 +129,7 @@ class DailyFreeSpinCard extends StatelessWidget {
   ) {
     return SizedBox(
       width: double.infinity,
+      height: 44, // Reduced height
       child: ElevatedButton(
         onPressed: () async {
           final claimed = await dailySpinService.claimDailySpin();
@@ -168,98 +149,64 @@ class DailyFreeSpinCard extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFF48FB1),
           foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           elevation: 0,
-          shadowColor: const Color(0xFFF48FB1).withValues(alpha: 0.5),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.touch_app, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'CLAIM REWARD',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-              ),
-            ),
-          ],
+        child: const Text(
+          'CLAIM REWARD',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCountdownDisplay(String countdown) {
-    // Assuming countdown comes in format HH:MM:SS
+  Widget _buildCompactCountdown(String countdown) {
     final parts = countdown.split(':');
-    if (parts.length != 3) {
-      // Fallback if format is different
-      return Center(
-        child: Text(countdown, style: const TextStyle(color: Colors.white)),
-      );
-    }
+    if (parts.length != 3) return const SizedBox.shrink();
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _buildTimeBox(parts[0], 'HRS'),
-        _buildSeparator(),
-        _buildTimeBox(parts[1], 'MIN'),
-        _buildSeparator(),
-        _buildTimeBox(parts[2], 'SEC'),
+        _buildCompactUnit(parts[0], 'h'),
+        const SizedBox(width: 4),
+        _buildCompactUnit(parts[1], 'm'),
+        const SizedBox(width: 4),
+        _buildCompactUnit(parts[2], 's'),
       ],
     );
   }
 
-  Widget _buildTimeBox(String value, String label) {
-    return Column(
+  Widget _buildCompactUnit(String value, String label) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
-            ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            fontFamily: 'monospace',
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(width: 1),
         Text(
           label,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.3),
-            fontSize: 9,
+            fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSeparator() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-      child: Text(
-        ':',
-        style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.3),
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 }

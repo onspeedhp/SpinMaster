@@ -77,15 +77,30 @@ class ApiService {
   }
 
   /// Handle API response
-  static Map<String, dynamic> handleResponse(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body);
-    } else {
-      final error = jsonDecode(response.body);
-      throw ApiException(
-        error['error'] ?? 'Unknown error',
-        response.statusCode,
-      );
+  static dynamic handleResponse(http.Response response) {
+    String body = response.body;
+
+    try {
+      final decoded = jsonDecode(body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return decoded;
+      } else {
+        throw ApiException(
+          decoded['error'] ?? 'Unknown error',
+          response.statusCode,
+        );
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return body; // Return raw body if it's not JSON but success
+      } else {
+        throw ApiException(
+          body.isNotEmpty ? body : 'Unknown server error',
+          response.statusCode,
+        );
+      }
     }
   }
 }

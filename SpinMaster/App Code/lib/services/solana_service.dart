@@ -256,6 +256,13 @@ class SolanaService extends ChangeNotifier {
     }
   }
 
+  /// Clear authentication state locally (without calling wallet app)
+  Future<void> clearLocalSession() async {
+    _state = _state.copyWith(clearAuth: true);
+    await _clearAuthData();
+    notifyListeners();
+  }
+
   // --- Transaction Helpers ---
 
   Future<String?> transferSol(String recipientAddress, double amountSol) async {

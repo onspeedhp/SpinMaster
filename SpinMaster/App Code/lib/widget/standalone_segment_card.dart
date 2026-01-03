@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import '../model/spinner_segment_model.dart';
 import 'package:wheeler/utils/ui_utils.dart';
 
+/// Widget for managing custom segments with premium styling
 class StandaloneSegmentCard extends StatefulWidget {
   final List<SpinnerSegment> segments;
   final Function(List<SpinnerSegment>) onSegmentsUpdated;
@@ -52,9 +53,9 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
       text: isEditing ? segment.text : '',
     );
 
-    Color selectedColor = isEditing ? segment.color : Colors.blue;
-    Color selectedTextColor = isEditing ? segment.textColor : Colors.black;
-    Color selectedStrokeColor = isEditing ? segment.strokeColor : Colors.white;
+    Color selectedColor = isEditing ? segment.color : const Color(0xFFF48FB1);
+    Color selectedTextColor = isEditing ? segment.textColor : Colors.white;
+    Color selectedStrokeColor = isEditing ? segment.strokeColor : Colors.black;
     int selectedFontSize = isEditing ? segment.fontSize ?? 17 : 17;
     String? backgroundImagePath = isEditing ? segment.imagePath : null;
     String? centerImagePath = isEditing ? segment.centerImagePath : null;
@@ -65,268 +66,114 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
         return StatefulBuilder(
           builder: (context, dialogSetState) {
             return AlertDialog(
-              title: Text(isEditing ? 'Edit Segment' : 'Add New Segment'),
-              contentPadding: const EdgeInsets.all(20),
-              insetPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 24,
+              backgroundColor: const Color(0xFF16213e),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
               ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Text Input
-                      TextField(
-                        controller: textController,
-                        decoration: const InputDecoration(
-                          labelText: 'Segment Text',
-                          border: OutlineInputBorder(),
+              title: Text(
+                isEditing ? 'Edit Segment' : 'Add New Segment',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Theme(
+                data: ThemeData.dark(),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: textController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: 'Segment Text',
+                            labelStyle: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFFF48FB1)),
+                            ),
+                          ),
+                          maxLength: 50,
                         ),
-                        maxLength: 50,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Background Color
-                      const Text(
-                        'Background Color:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () async {
-                          final Color? picked = await showDialog<Color>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Pick Background Color'),
-                              content: SingleChildScrollView(
-                                child: ColorPicker(
-                                  pickerColor: selectedColor,
-                                  onColorChanged: (c) => selectedColor = c,
-                                  enableAlpha: false,
-                                  showLabel: false,
-                                  paletteType: PaletteType.hsv,
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, selectedColor),
-                                  child: const Text('OK'),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (picked != null)
-                            dialogSetState(() => selectedColor = picked);
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: selectedColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(width: 2, color: Colors.grey),
-                          ),
+                        const SizedBox(height: 16),
+                        _buildColorOption(
+                          'Background Color',
+                          selectedColor,
+                          (color) =>
+                              dialogSetState(() => selectedColor = color),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Background Image
-                      const Text(
-                        'Background Image:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          if (backgroundImagePath != null)
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundImage: FileImage(
-                                File(backgroundImagePath!),
-                              ),
-                            ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: Icon(
-                              backgroundImagePath != null
-                                  ? Icons.edit
-                                  : Icons.image,
-                            ),
-                            onPressed: () async {
-                              final path = await _pickImage();
-                              if (path != null)
-                                dialogSetState(
-                                  () => backgroundImagePath = path,
-                                );
-                            },
-                          ),
-                          if (backgroundImagePath != null)
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () => dialogSetState(
-                                () => backgroundImagePath = null,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Center Image
-                      const Text(
-                        'Center Image:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          if (centerImagePath != null)
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundImage: FileImage(
-                                File(centerImagePath!),
-                              ),
-                            ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: Icon(
-                              centerImagePath != null
-                                  ? Icons.edit
-                                  : Icons.image,
-                            ),
-                            onPressed: () async {
-                              final path = await _pickImage();
-                              if (path != null)
-                                dialogSetState(() => centerImagePath = path);
-                            },
-                          ),
-                          if (centerImagePath != null)
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () =>
-                                  dialogSetState(() => centerImagePath = null),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Font Size
-                      Text(
-                        'Font Size: $selectedFontSize',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Slider(
-                        value: selectedFontSize.toDouble(),
-                        min: 12,
-                        max: 25,
-                        divisions: 13,
-                        onChanged: (v) =>
-                            dialogSetState(() => selectedFontSize = v.round()),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Text Color
-                      const Text(
-                        'Text Color:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () async {
-                          final Color? picked = await showDialog<Color>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Pick Text Color'),
-                              content: SingleChildScrollView(
-                                child: ColorPicker(
-                                  pickerColor: selectedTextColor,
-                                  onColorChanged: (c) => selectedTextColor = c,
-                                  enableAlpha: false,
-                                  showLabel: false,
-                                  paletteType: PaletteType.hsv,
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, selectedTextColor),
-                                  child: const Text('OK'),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (picked != null)
-                            dialogSetState(() => selectedTextColor = picked);
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: selectedTextColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(width: 2, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        _buildImageOption(
+                          'Background Image',
+                          backgroundImagePath,
+                          () async {
+                            final path = await _pickImage();
+                            if (path != null)
+                              dialogSetState(() => backgroundImagePath = path);
+                          },
+                          () =>
+                              dialogSetState(() => backgroundImagePath = null),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildImageOption(
+                          'Center Image',
+                          centerImagePath,
+                          () async {
+                            final path = await _pickImage();
+                            if (path != null)
+                              dialogSetState(() => centerImagePath = path);
+                          },
+                          () => dialogSetState(() => centerImagePath = null),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Font Size: $selectedFontSize',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Stroke Color
-                      const Text(
-                        'Stroke Color:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () async {
-                          final Color? picked = await showDialog<Color>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Pick Stroke Color'),
-                              content: SingleChildScrollView(
-                                child: ColorPicker(
-                                  pickerColor: selectedStrokeColor,
-                                  onColorChanged: (c) =>
-                                      selectedStrokeColor = c,
-                                  enableAlpha: false,
-                                  showLabel: false,
-                                  paletteType: PaletteType.hsv,
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(
-                                    context,
-                                    selectedStrokeColor,
-                                  ),
-                                  child: const Text('OK'),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (picked != null)
-                            dialogSetState(() => selectedStrokeColor = picked);
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: selectedStrokeColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(width: 2, color: Colors.grey),
+                        Slider(
+                          value: selectedFontSize.toDouble(),
+                          min: 12,
+                          max: 25,
+                          activeColor: const Color(0xFFF48FB1),
+                          inactiveColor: Colors.white12,
+                          onChanged: (v) => dialogSetState(
+                            () => selectedFontSize = v.round(),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        _buildColorOption(
+                          'Text Color',
+                          selectedTextColor,
+                          (color) =>
+                              dialogSetState(() => selectedTextColor = color),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(
+                    'CANCEL',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -339,7 +186,6 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                       );
                       return;
                     }
-
                     final newSegment = SpinnerSegment(
                       text: textController.text.trim(),
                       color: selectedColor,
@@ -349,18 +195,20 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
                       textColor: selectedTextColor,
                       strokeColor: selectedStrokeColor,
                     );
-
                     final updated = List<SpinnerSegment>.from(widget.segments);
                     if (isEditing) {
                       updated[index] = newSegment;
                     } else {
                       updated.add(newSegment);
                     }
-
                     widget.onSegmentsUpdated(updated);
                     Navigator.pop(context);
                   },
-                  child: Text(isEditing ? 'Save' : 'Add'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF48FB1),
+                    foregroundColor: Colors.black,
+                  ),
+                  child: Text(isEditing ? 'SAVE' : 'ADD'),
                 ),
               ],
             );
@@ -370,99 +218,267 @@ class _StandaloneSegmentCardState extends State<StandaloneSegmentCard> {
     );
   }
 
-  void _deleteSegment(int index) {
-    if (widget.segments.length <= 2) {
-      UIUtils.showMessageDialog(
-        context,
-        title: 'Limit reached',
-        message: 'At least 2 segments are required',
-        isError: true,
-      );
-      return;
-    }
-    final updated = List<SpinnerSegment>.from(widget.segments)..removeAt(index);
-    widget.onSegmentsUpdated(updated);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Column(
-        children: [
-          // Segment List
-          ...widget.segments.asMap().entries.map((entry) {
-            final index = entry.key;
-            final segment = entry.value;
-            return ListTile(
-              leading: CircleAvatar(backgroundColor: segment.color, radius: 16),
-              title: Text(
-                segment.text,
-                style: TextStyle(
-                  fontSize: segment.fontSize?.toDouble() ?? 17,
-                  color: segment.textColor,
-                  fontWeight: FontWeight.w500,
+  Widget _buildColorOption(
+    String label,
+    Color color,
+    Function(Color) onPicked,
+  ) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTap: () async {
+            Color pickerColor = color;
+            final Color? pickedColor = await showDialog<Color>(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: const Color(0xFF1a1a2e),
+                title: Text(
+                  'Pick $label',
+                  style: const TextStyle(color: Colors.white),
                 ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () =>
-                        _showSegmentDialog(index: index, segment: segment),
+                content: SingleChildScrollView(
+                  child: ColorPicker(
+                    pickerColor: pickerColor,
+                    onColorChanged: (c) => pickerColor = c,
+                    enableAlpha: false,
+                    showLabel: false,
+                    paletteType: PaletteType.hsv,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _deleteSegment(index),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(pickerColor),
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(color: Color(0xFFF48FB1)),
+                    ),
                   ),
                 ],
               ),
             );
-          }),
+            if (pickedColor != null) onPicked(pickedColor);
+          },
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.5),
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-          // Add Button + Counter
+  Widget _buildImageOption(
+    String label,
+    String? currentPath,
+    VoidCallback onPick,
+    VoidCallback onClear,
+  ) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const Spacer(),
+        if (currentPath != null)
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: FileImage(File(currentPath)),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        IconButton(
+          icon: Icon(
+            currentPath != null
+                ? Icons.edit_rounded
+                : Icons.add_a_photo_rounded,
+            color: const Color(0xFFF48FB1),
+            size: 20,
+          ),
+          onPressed: onPick,
+        ),
+        if (currentPath != null)
+          IconButton(
+            icon: const Icon(
+              Icons.close_rounded,
+              color: Colors.redAccent,
+              size: 20,
+            ),
+            onPressed: onClear,
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF16213e).withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: [
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    if (widget.segments.length >= 12) {
-                      UIUtils.showMessageDialog(
-                        context,
-                        title: 'Limit reached',
-                        message: 'Maximum 12 segments allowed',
-                        isError: true,
-                      );
-                      return;
-                    }
-                    _showSegmentDialog();
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Segment'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                const Icon(
+                  Icons.layers_rounded,
+                  color: Color(0xFFF48FB1),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'CUSTOM SEGMENTS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                    fontSize: 12,
                   ),
                 ),
+                const Spacer(),
                 Text(
                   '${widget.segments.length}/12',
                   style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: widget.segments.length > 12
-                        ? Colors.red
-                        : widget.segments.length < 2
-                        ? Colors.orange
-                        : Colors.green,
                   ),
                 ),
               ],
+            ),
+          ),
+          const Divider(height: 1, color: Colors.white10),
+          ...widget.segments.asMap().entries.map((entry) {
+            final index = entry.key;
+            final segment = entry.value;
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: segment.color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+                title: Text(
+                  segment.text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit_rounded,
+                        color: Colors.white38,
+                        size: 18,
+                      ),
+                      onPressed: () =>
+                          _showSegmentDialog(index: index, segment: segment),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_rounded,
+                        color: Colors.redAccent,
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        if (widget.segments.length <= 2) {
+                          UIUtils.showMessageDialog(
+                            context,
+                            title: 'Limit reached',
+                            message: 'At least 2 segments are required',
+                            isError: true,
+                          );
+                          return;
+                        }
+                        final updated = List<SpinnerSegment>.from(
+                          widget.segments,
+                        )..removeAt(index);
+                        widget.onSegmentsUpdated(updated);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF48FB1),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  if (widget.segments.length >= 12) {
+                    UIUtils.showMessageDialog(
+                      context,
+                      title: 'Limit reached',
+                      message: 'Maximum 12 segments allowed',
+                      isError: true,
+                    );
+                    return;
+                  }
+                  _showSegmentDialog();
+                },
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text(
+                  'ADD NEW SEGMENT',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

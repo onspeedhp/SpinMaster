@@ -482,9 +482,20 @@ class _WheelCardState extends State<WheelCard>
               width: double.infinity,
               height: 380, // Larger size
               margin: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.black,
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFF48FB1).withValues(alpha: 0.1),
+                  width: 8,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFF48FB1).withValues(alpha: 0.05),
+                    blurRadius: 30,
+                    spreadRadius: 10,
+                  ),
+                ],
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -509,45 +520,64 @@ class _WheelCardState extends State<WheelCard>
                   GestureDetector(
                     onTap: isSpinning ? null : spinWheel,
                     child: Container(
-                      width: 60,
-                      height: 60,
+                      width: 70,
+                      height: 70,
                       decoration: BoxDecoration(
-                        color: Colors.black,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF48FB1), Color(0xFFAD1457)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFFF48FB1),
-                          width: 3,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(
                               0xFFF48FB1,
-                            ).withValues(alpha: 0.5),
-                            blurRadius: 15,
+                            ).withValues(alpha: 0.6),
+                            blurRadius: 20,
                             spreadRadius: 2,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Center(
                         child: isSpinning
                             ? const SizedBox(
-                                width: 20,
-                                height: 20,
+                                width: 24,
+                                height: 24,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                                  strokeWidth: 3,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFFF48FB1),
+                                    Colors.white,
                                   ),
                                 ),
                               )
-                            : const Text(
-                                'SPIN',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  letterSpacing: 1,
-                                ),
+                            : const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  Text(
+                                    'SPIN',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                ],
                               ),
                       ),
                     ),

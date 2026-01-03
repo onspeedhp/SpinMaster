@@ -4,7 +4,11 @@ import rateLimit from 'express-rate-limit';
 export const dailyClaimLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: 1,
-  message: 'Daily spin already claimed. Please try again tomorrow.',
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Daily spin already claimed. Please try again tomorrow.'
+    });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   // Use wallet address as key instead of IP
@@ -15,7 +19,11 @@ export const dailyClaimLimiter = rateLimit({
 export const spinLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 100,
-  message: 'Too many spin requests. Please try again later.',
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many spin requests. Please try again later.'
+    });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => req.user?.walletAddress || req.ip
@@ -25,7 +33,11 @@ export const spinLimiter = rateLimit({
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5,
-  message: 'Too many login attempts. Please try again later.',
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many login attempts. Please try again later.'
+    });
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -34,7 +46,11 @@ export const loginLimiter = rateLimit({
 export const paymentLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10,
-  message: 'Too many purchase requests. Please try again later.',
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many purchase requests. Please try again later.'
+    });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => req.user?.walletAddress || req.ip

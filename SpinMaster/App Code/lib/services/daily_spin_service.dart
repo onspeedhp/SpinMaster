@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/daily_spin.dart';
 import 'user_api.dart';
@@ -10,7 +11,7 @@ class DailySpinService extends ChangeNotifier {
   static final DailySpinService _instance = DailySpinService._internal();
   factory DailySpinService() => _instance;
   DailySpinService._internal() {
-    _loadStatus();
+    _loadStatus().then((_) => syncWithBackend());
     _startTimer();
   }
 
@@ -29,7 +30,7 @@ class DailySpinService extends ChangeNotifier {
       final jsonStr = prefs.getString(_storageKey);
 
       if (jsonStr != null) {
-        final json = Map<String, dynamic>.from(Uri.splitQueryString(jsonStr));
+        final Map<String, dynamic> json = jsonDecode(jsonStr);
         _status = DailySpinStatus.fromJson(json);
         _updateAvailability();
       }
@@ -43,7 +44,7 @@ class DailySpinService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final json = _status.toJson();
-      await prefs.setString(_storageKey, json.toString());
+      await prefs.setString(_storageKey, jsonEncode(json));
     } catch (e) {
       debugPrint('Error saving daily spin status: $e');
     }
@@ -137,6 +138,8 @@ class DailySpinService extends ChangeNotifier {
       return true;
     } catch (e) {
       debugPrint('Daily spin: Error claiming - $e');
+      // On any error (including rate limit), sync to check if it's already claimed
+      await syncWithBackend();
       return false;
     }
   }

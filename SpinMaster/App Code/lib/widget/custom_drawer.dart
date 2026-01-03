@@ -254,15 +254,20 @@ class CustomDrawer extends StatelessWidget {
                   context,
                   listen: false,
                 );
-                await solanaService.deauthorize();
+                await solanaService.clearLocalSession();
 
-                if (Navigator.canPop(context)) Navigator.pop(context);
+                // Dismiss loading dialog
+                if (Navigator.canPop(context)) {
+                  Navigator.of(context, rootNavigator: true).pop();
+                }
 
+                // Navigate to Login Page
                 Navigator.of(
                   context,
-                ).pushNamedAndRemoveUntil('/', (route) => false);
+                ).pushNamedAndRemoveUntil('/login', (route) => false);
 
-                Future.delayed(const Duration(milliseconds: 500), () {
+                // Show success message after navigation
+                Future.delayed(const Duration(milliseconds: 300), () {
                   if (context.mounted) {
                     UIUtils.showMessageDialog(
                       context,
@@ -272,12 +277,17 @@ class CustomDrawer extends StatelessWidget {
                   }
                 });
               } catch (e) {
-                if (Navigator.canPop(context)) Navigator.pop(context);
+                // Dismiss loading dialog on error
+                if (Navigator.canPop(context)) {
+                  Navigator.of(context, rootNavigator: true).pop();
+                }
+
                 if (context.mounted) {
                   UIUtils.showMessageDialog(
                     context,
                     title: 'Status',
                     message: 'Logout failed: $e',
+                    isError: true,
                   );
                 }
               }
