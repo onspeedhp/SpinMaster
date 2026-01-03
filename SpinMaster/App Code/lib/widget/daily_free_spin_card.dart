@@ -92,7 +92,7 @@ class DailyFreeSpinCard extends StatelessWidget {
                             style: TextStyle(
                               color: isAvailable
                                   ? const Color(0xFFF48FB1)
-                                  : Colors.white38,
+                                  : Colors.white.withValues(alpha: 0.6),
                               fontSize: 10,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 2,
@@ -103,10 +103,13 @@ class DailyFreeSpinCard extends StatelessWidget {
                             isAvailable
                                 ? 'Claim Daily Free Spin!'
                                 : 'Next Gift Unlocking',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                            style: TextStyle(
+                              color: isAvailable
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.9),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
@@ -227,21 +230,25 @@ class DailyFreeSpinCard extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 50,
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          width: 54,
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFFF48FB1).withValues(alpha: 0.15),
+              width: 1,
+            ),
           ),
           child: Text(
             value,
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.w900,
               fontFamily: 'monospace',
+              letterSpacing: 1,
             ),
           ),
         ),

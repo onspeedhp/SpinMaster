@@ -1,5 +1,5 @@
+import 'dart:ui';
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:wheeler/services/sound_manager.dart';
 import 'package:wheeler/model/spinner_segment_model.dart';
@@ -340,114 +340,141 @@ class _WheelCardState extends State<WheelCard>
           },
           child: Dialog(
             backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                color: const Color(0xFF16213e),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: (isWin ? const Color(0xFFF48FB1) : Colors.grey)
-                      .withValues(alpha: 0.5),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (isWin ? const Color(0xFFF48FB1) : Colors.black)
-                        .withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    isWin ? 'CONGRATULATIONS!' : 'SPIN RESULT',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: isWin ? const Color(0xFFF48FB1) : Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 3,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (segment.iconUrl != null ||
-                      segment.centerImagePath != null) ...[
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFF48FB1).withValues(alpha: 0.1),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFF48FB1,
-                            ).withValues(alpha: 0.2),
-                            blurRadius: 15,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF16213e).withValues(alpha: 0.9),
+                              const Color(0xFF0f172a).withValues(alpha: 0.95),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(20),
-                      child:
-                          (segment.iconUrl != null &&
-                              segment.iconUrl!.startsWith('http'))
-                          ? Image.network(segment.iconUrl!)
-                          : Image.file(
-                              File(segment.iconUrl ?? segment.centerImagePath!),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(
+                            color:
+                                (isWin
+                                        ? const Color(0xFFF48FB1)
+                                        : Colors.white24)
+                                    .withValues(alpha: 0.4),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  (isWin
+                                          ? const Color(0xFFF48FB1)
+                                          : Colors.black)
+                                      .withValues(alpha: 0.2),
+                              blurRadius: 30,
+                              spreadRadius: 5,
                             ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                  Text(
-                    resultText,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black26,
-                          offset: Offset(0, 4),
-                          blurRadius: 10,
+                          ],
                         ),
-                      ],
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Header Icon/Badge
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color:
+                                    (isWin
+                                            ? const Color(0xFFF48FB1)
+                                            : Colors.white10)
+                                        .withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color:
+                                      (isWin
+                                              ? const Color(0xFFF48FB1)
+                                              : Colors.white24)
+                                          .withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: Icon(
+                                isWin
+                                    ? Icons.auto_awesome_rounded
+                                    : Icons.info_outline_rounded,
+                                color: isWin
+                                    ? const Color(0xFFF48FB1)
+                                    : Colors.white60,
+                                size: 40,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              isWin ? 'CONGRATULATIONS!' : 'SPIN RESULT',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isWin
+                                    ? const Color(0xFFF48FB1)
+                                    : Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              resultText,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  SoundManager.stopVictorySound();
+                                  Navigator.of(context).pop();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF48FB1),
+                                  foregroundColor: Colors.black,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  'CONTINUE',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 16,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        SoundManager.stopVictorySound();
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF48FB1),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'AWESOME!',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         );

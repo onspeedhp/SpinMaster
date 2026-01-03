@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wheeler/widget/custom_drawer.dart';
@@ -419,92 +420,112 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
       builder: (_) => Center(
         child: Material(
           type: MaterialType.transparency,
-          child: Container(
-            width: 280,
-            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF16213e),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: const Color(0xFFF48FB1).withValues(alpha: 0.4),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFF48FB1).withValues(alpha: 0.2),
-                  blurRadius: 30,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 70,
-                      height: 70,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.elasticOut,
+            builder: (context, scale, child) {
+              return Transform.scale(
+                scale: scale,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      width: 300,
+                      padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF16213e).withValues(alpha: 0.9),
+                            const Color(0xFF0f172a).withValues(alpha: 0.95),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(
+                          color: const Color(0xFFF48FB1).withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(
                               0xFFF48FB1,
-                            ).withValues(alpha: 0.25),
-                            blurRadius: 15,
+                            ).withValues(alpha: 0.15),
+                            blurRadius: 30,
                             spreadRadius: 2,
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(
-                      height: 50,
-                      width: 50,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 4,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFFF48FB1),
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                height: 80,
+                                width: 80,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    const Color(
+                                      0xFFF48FB1,
+                                    ).withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ),
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.8, end: 1.2),
+                                duration: const Duration(seconds: 1),
+                                curve: Curves.easeInOutSine,
+                                builder: (context, pulse, _) {
+                                  return Transform.scale(
+                                    scale: pulse,
+                                    child: const Icon(
+                                      Icons.security_rounded,
+                                      color: Color(0xFFF48FB1),
+                                      size: 32,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 32),
+                          const Text(
+                            'PROCESSING',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ValueListenableBuilder<String>(
+                            valueListenable: statusNotifier,
+                            builder: (context, status, _) {
+                              return Text(
+                                status,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.5,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    const Icon(
-                      Icons.security_rounded,
-                      color: Color(0xFFF48FB1),
-                      size: 20,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                const Text(
-                  'PROCESSING',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
-                    decoration: TextDecoration.none,
                   ),
                 ),
-                const SizedBox(height: 12),
-                ValueListenableBuilder<String>(
-                  valueListenable: statusNotifier,
-                  builder: (context, status, _) {
-                    return Text(
-                      status,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        decoration: TextDecoration.none,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -637,11 +658,13 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 6),
                               Container(
-                                margin: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 20,
+                                margin: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  10,
                                 ),
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
