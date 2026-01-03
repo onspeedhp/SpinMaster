@@ -63,6 +63,92 @@ class CustomDrawer extends StatelessWidget {
                       width: 50,
                       color: const Color(0xFFF48FB1).withValues(alpha: 0.5),
                     ),
+                    const SizedBox(height: 30),
+                    // Wallet Info Card
+                    Consumer<SolanaService>(
+                      builder: (context, solanaService, _) {
+                        final address = solanaService.state.address;
+                        final displayAddress = address != null
+                            ? '${address.substring(0, 8)}...${address.substring(address.length - 8)}'
+                            : 'Not Connected';
+
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: address != null
+                                          ? Colors.greenAccent
+                                          : Colors.redAccent,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color:
+                                              (address != null
+                                                      ? Colors.greenAccent
+                                                      : Colors.redAccent)
+                                                  .withValues(alpha: 0.5),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    address != null
+                                        ? 'CONNECTED'
+                                        : 'DISCONNECTED',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.account_balance_wallet_rounded,
+                                    color: Color(0xFFF48FB1),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      displayAddress,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'monospace',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

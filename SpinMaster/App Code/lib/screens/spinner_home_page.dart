@@ -553,81 +553,41 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: const Text(
-              'SEEKSPIN',
-              style: TextStyle(
-                color: Color(0xFFF48FB1),
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-                letterSpacing: 3,
-                shadows: [
-                  Shadow(
-                    color: Color(0x80F48FB1),
-                    blurRadius: 10,
-                    offset: Offset(0, 0),
+            toolbarHeight: 80,
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'SEEKSPIN',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 26,
+                    letterSpacing: 6,
+                    shadows: [Shadow(color: Color(0xFFF48FB1), blurRadius: 15)],
                   ),
-                ],
-              ),
+                ),
+                Container(
+                  height: 2,
+                  width: 40,
+                  margin: const EdgeInsets.only(top: 4),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Color(0xFFF48FB1),
+                        Colors.transparent,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
             foregroundColor: const Color(0xFFF48FB1),
-            actions: [
-              Consumer<SolanaService>(
-                builder: (context, solanaService, _) {
-                  final address = solanaService.state.address;
-                  final displayAddress = address != null
-                      ? '${address.substring(0, 4)}...${address.substring(address.length - 4)}'
-                      : 'Not Connected';
-
-                  return Container(
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 8,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF16213e).withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: const Color(0xFFF48FB1).withValues(alpha: 0.1),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFF48FB1).withValues(alpha: 0.1),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.account_balance_wallet,
-                          size: 14,
-                          color: address != null
-                              ? const Color(0xFFF48FB1)
-                              : Colors.grey,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          displayAddress,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
           ),
           drawer: CustomDrawer(),
           body: Container(
@@ -689,28 +649,35 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
                                     colors: [
                                       const Color(
                                         0xFF16213e,
-                                      ).withValues(alpha: 0.9),
+                                      ).withValues(alpha: 0.95),
                                       const Color(
                                         0xFF1a1a2e,
-                                      ).withValues(alpha: 0.9),
+                                      ).withValues(alpha: 0.95),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
-                                  borderRadius: BorderRadius.circular(24),
+                                  borderRadius: BorderRadius.circular(28),
                                   border: Border.all(
                                     color: const Color(
                                       0xFFF48FB1,
-                                    ).withValues(alpha: 0.5),
+                                    ).withValues(alpha: 0.3),
                                     width: 1.5,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(
                                         0xFFF48FB1,
-                                      ).withValues(alpha: 0.2),
-                                      blurRadius: 15,
-                                      spreadRadius: 1,
+                                      ).withValues(alpha: 0.1),
+                                      blurRadius: 20,
+                                      spreadRadius: -2,
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 10),
                                     ),
                                   ],
                                 ),
@@ -816,12 +783,7 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
                                   ],
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20.0,
-                                ),
-                                child: const DailyFreeSpinCard(),
-                              ),
+                              const DailyFreeSpinCard(),
                               const SizedBox(height: 20),
                               WheelCard(
                                 segments: currentWheel.segments,
