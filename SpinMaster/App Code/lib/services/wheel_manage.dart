@@ -13,6 +13,10 @@ class WheelProvider with ChangeNotifier {
   List<Wheel> get wheels => _wheels;
   Wheel? get currentWheel => _currentWheel;
 
+  // Separate official wheel from user wheels
+  Wheel? _officialWheel;
+  Wheel? get officialWheel => _officialWheel;
+
   // New features for SeekSpin
   int _spinsBalance = 0;
 
@@ -33,14 +37,28 @@ class WheelProvider with ChangeNotifier {
         final List<dynamic> wheelsList = json.decode(wheelsJson);
         _wheels = wheelsList.map((wheel) => Wheel.fromJson(wheel)).toList();
 
+        // Migration: Remove official wheel from legacy storage if present
+        final hasLegacyOfficial = _wheels.any(
+          (w) => w.id == 'seek_spin_official',
+        );
+        if (hasLegacyOfficial) {
+          _wheels.removeWhere((w) => w.id == 'seek_spin_official');
+          _saveWheels(); // Clean up storage
+        }
+
+        // Check availability of current wheel in loaded list
         if (_wheels.isNotEmpty && _currentWheel == null) {
+          // Don't auto-set current wheel to official here implicitly,
+          // just default to first custom if available
           _currentWheel = _wheels.first;
         }
         notifyListeners();
       } else {
         _createDefaultWheel();
-        _createSeekSpinWheel(); // Create official wheel
       }
+
+      // Always initialize official wheel separately
+      _createSeekSpinWheel();
 
       // Initial sync with backend
       await Future.wait([syncSpinsWithBackend(), syncOfficialWheelConfig()]);
@@ -90,20 +108,12 @@ class WheelProvider with ChangeNotifier {
         await WheelPainter.loadImagesForSegments(segments);
         debugPrint('✅ Wheel images preloaded.');
 
-        // Find and update official wheel
-        final officialIndex = _wheels.indexWhere(
-          (w) => w.id == 'seek_spin_official',
-        );
-        if (officialIndex != -1) {
-          _wheels[officialIndex] = _wheels[officialIndex].copyWith(
-            segments: segments,
-          );
-          if (_currentWheel?.id == 'seek_spin_official') {
-            _currentWheel = _wheels[officialIndex];
-            debugPrint('🎡 Updated Current Wheel with Sent Config');
-          }
+        // Update official wheel directly
+        if (_officialWheel != null) {
+          _officialWheel = _officialWheel!.copyWith(segments: segments);
+          debugPrint('🎡 Updated Official Wheel with Sent Config');
           notifyListeners();
-          _saveWheels(); // Save to persist
+          // We don't save official wheel to local storage "wheels" key anymore
           debugPrint('Official wheel config synced with backend');
         }
       }
@@ -157,7 +167,7 @@ class WheelProvider with ChangeNotifier {
 
   // Create Official Play-to-Earn Wheel
   void _createSeekSpinWheel() {
-    final seekWheel = Wheel(
+    _officialWheel = Wheel(
       id: 'seek_spin_official',
       name: 'SeekSpin Official',
       segments: [
@@ -170,10 +180,7 @@ class WheelProvider with ChangeNotifier {
       ],
       createdAt: DateTime.now(),
     );
-    // Add to top
-    _wheels.insert(0, seekWheel);
-    _currentWheel = seekWheel;
-    _saveWheels();
+    notifyListeners();
   }
 
   // Create default wheel

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/leaderboard.dart';
-import '../services/leaderboard_service.dart';
+import 'package:wheeler/services/user_api.dart';
+import 'package:wheeler/services/solana_service.dart';
+import 'package:wheeler/widget/custom_drawer.dart';
 
-/// Leaderboard page showing rankings
 class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});
 
@@ -14,12 +14,30 @@ class LeaderboardPage extends StatefulWidget {
 class _LeaderboardPageState extends State<LeaderboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isRefreshing = false;
+
+  // Cache for different periods
+  final Map<String, List<dynamic>> _leaderboardCache = {};
+  final Map<String, bool> _isLoadingMap = {};
+  final Map<String, String> _errorMap = {};
+
+  final List<String> _periods = ['daily', 'weekly', 'all-time'];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_handleTabSelection);
+
+    // Initial load
+    _fetchLeaderboard('daily');
+    _fetchLeaderboard('weekly');
+    _fetchLeaderboard('all-time');
+  }
+
+  void _handleTabSelection() {
+    if (_tabController.indexIsChanging) {
+      // Optional: Refresh on tab change if needed, but we cache for now
+    }
   }
 
   @override
@@ -28,178 +46,212 @@ class _LeaderboardPageState extends State<LeaderboardPage>
     super.dispose();
   }
 
-  Future<void> _refresh() async {
-    setState(() => _isRefreshing = true);
-    await context.read<LeaderboardService>().refreshLeaderboards();
-    setState(() => _isRefreshing = false);
+  Future<void> _fetchLeaderboard(String period) async {
+    if (_isLoadingMap[period] == true) return;
+
+    setState(() {
+      _isLoadingMap[period] = true;
+      _errorMap[period] = '';
+    });
+
+    try {
+      final data = await UserApi.getLeaderboard(period: period);
+
+      if (mounted) {
+        setState(() {
+          _leaderboardCache[period] = data;
+          _isLoadingMap[period] = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMap[period] = 'Failed to load leaderboard';
+          _isLoadingMap[period] = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFF1a1a2e),
       appBar: AppBar(
-        title: const Text(
-          'Leaderboards',
-          style: TextStyle(
-            color: Color(0xFFF48FB1),
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
-          ),
-        ),
+        toolbarHeight: 80,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: const Color(0xFFF48FB1),
-        actions: [
-          IconButton(
-            icon: _isRefreshing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.refresh),
-            onPressed: _isRefreshing ? null : _refresh,
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
-          child: Container(
-            height: 50,
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: const Color(0xFFF48FB1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFF48FB1).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+        title: Column(
+          children: [
+            const Text(
+              'LEADERBOARD',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 22,
+                letterSpacing: 6,
+                shadows: [Shadow(color: Color(0xFFF48FB1), blurRadius: 15)],
               ),
-              labelColor: Colors.black,
-              unselectedLabelColor: Colors.white60,
-              overlayColor: WidgetStateProperty.all(Colors.transparent),
-              dividerColor: Colors.transparent,
-              indicatorSize: TabBarIndicatorSize.tab,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-              tabs: const [
-                Tab(text: 'Daily'),
-                Tab(text: 'Weekly'),
-                Tab(text: 'All Time'),
-              ],
             ),
-          ),
-        ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1a1a2e), // Deep Navy/Purple
-              Color(0xFF000000), // Pure Black
-            ],
-            stops: [0.0, 0.6],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // User's rank card
-              const _UserRankCard(),
-
-              // Leaderboard list
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _LeaderboardList(period: LeaderboardPeriod.daily),
-                    _LeaderboardList(period: LeaderboardPeriod.weekly),
-                    _LeaderboardList(period: LeaderboardPeriod.allTime),
+            Container(
+              height: 2,
+              width: 40,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    Color(0xFFF48FB1),
+                    Colors.transparent,
                   ],
                 ),
+                borderRadius: BorderRadius.circular(2),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(
+                Icons.menu_rounded,
+                size: 32,
+                color: Colors.white,
+              ),
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: const Color(0xFFF48FB1),
+          labelColor: const Color(0xFFF48FB1),
+          unselectedLabelColor: Colors.white54,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          tabs: const [
+            Tab(text: 'DAILY'),
+            Tab(text: 'WEEKLY'),
+            Tab(text: 'ALL TIME'),
+          ],
+        ),
+      ),
+      endDrawer: const CustomDrawer(currentRoute: '/leaderboard'),
+      body: Column(
+        children: [
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: _periods
+                  .map((period) => _buildLeaderboardList(period))
+                  .toList(),
+            ),
+          ),
+          _buildMyRankBar(),
+        ],
       ),
     );
   }
-}
 
-class _UserRankCard extends StatelessWidget {
-  const _UserRankCard();
+  Widget _buildMyRankBar() {
+    return Consumer<SolanaService>(
+      builder: (context, solanaService, _) {
+        final currentAddress = solanaService.state.address;
+        if (currentAddress == null) return const SizedBox.shrink();
 
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<LeaderboardService>(
-      builder: (context, service, _) {
-        final stats = service.userStats;
+        // Find my rank in current active list
+        final currentIndex = _tabController.index;
+        final currentPeriod = _periods[currentIndex];
+        final list = _leaderboardCache[currentPeriod] ?? [];
+
+        final myEntry = list.firstWhere(
+          (entry) => entry['walletAddress'] == currentAddress,
+          orElse: () => null,
+        );
+
+        if (myEntry == null) return const SizedBox.shrink();
 
         return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFF121212),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFFF48FB1).withValues(alpha: 0.3),
+            color: const Color(0xFF16213e),
+            border: Border(
+              top: BorderSide(
+                color: const Color(0xFFF48FB1).withOpacity(0.3),
+                width: 1,
+              ),
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFF48FB1).withValues(alpha: 0.1),
+                color: Colors.black.withOpacity(0.3),
                 blurRadius: 10,
+                offset: const Offset(0, -5),
               ),
             ],
           ),
-          child: Column(
+          child: Row(
             children: [
-              const Text(
-                'YOUR STATS',
-                style: TextStyle(
-                  color: const Color(0xFFF48FB1),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF48FB1).withOpacity(0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFF48FB1), width: 2),
+                ),
+                child: Text(
+                  '#${myEntry['rank']}',
+                  style: const TextStyle(
+                    color: Color(0xFFF48FB1),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _StatItem(
-                    icon: Icons.refresh,
-                    label: 'Total Spins',
-                    value: '${stats.totalSpins}',
+              const SizedBox(width: 16),
+              const Text(
+                'You',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF48FB1).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFF48FB1).withOpacity(0.2),
                   ),
-                  _StatItem(
-                    icon: Icons.star,
-                    label: 'Total Rewards',
-                    value: '${stats.totalRewards}',
-                  ),
-                  _StatItem(
-                    icon: Icons.emoji_events,
-                    label: 'Best Rank',
-                    value:
-                        '#${stats.allTimeRank > 0 ? stats.allTimeRank : '-'}',
-                  ),
-                ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Color(0xFFF48FB1),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatPoints(myEntry['totalRewards']),
+                      style: const TextStyle(
+                        color: Color(0xFFF48FB1),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -207,204 +259,240 @@ class _UserRankCard extends StatelessWidget {
       },
     );
   }
-}
 
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
+  Widget _buildLeaderboardList(String period) {
+    return Consumer<SolanaService>(
+      builder: (context, solanaService, _) {
+        final currentAddress = solanaService.state.address;
+        final isLoading = _isLoadingMap[period] ?? true;
+        final errorMessage = _errorMap[period] ?? '';
+        final leaderboard = _leaderboardCache[period] ?? [];
 
-  const _StatItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70, fontSize: 10),
-        ),
-      ],
-    );
-  }
-}
-
-class _LeaderboardList extends StatelessWidget {
-  final LeaderboardPeriod period;
-
-  const _LeaderboardList({required this.period});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<LeaderboardService>(
-      builder: (context, service, _) {
-        final entries = service.getLeaderboard(period);
-
-        if (entries.isEmpty) {
+        if (isLoading && leaderboard.isEmpty) {
           return const Center(
+            child: CircularProgressIndicator(color: Color(0xFFF48FB1)),
+          );
+        }
+
+        if (errorMessage.isNotEmpty && leaderboard.isEmpty) {
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.leaderboard, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.redAccent,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
                 Text(
-                  'No data yet',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  errorMessage,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => _fetchLeaderboard(period),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF48FB1),
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Retry'),
                 ),
               ],
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: entries.length,
-          itemBuilder: (context, index) {
-            final entry = entries[index];
-            return _LeaderboardTile(entry: entry, index: index);
-          },
+        if (leaderboard.isEmpty) {
+          return Center(
+            child: Text(
+              'No records for this period',
+              style: TextStyle(color: Colors.white.withOpacity(0.5)),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: const Color(0xFFF48FB1),
+          backgroundColor: const Color(0xFF16213e),
+          onRefresh: () => _fetchLeaderboard(period),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(20),
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: leaderboard.length,
+            itemBuilder: (context, index) {
+              final entry = leaderboard[index];
+              final int rank = entry['rank'];
+              final isTop3 = rank <= 3;
+              final Color rankColor = _getRankColor(rank);
+              final isMe = entry['walletAddress'] == currentAddress;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: isMe
+                      ? const Color(0xFFF48FB1).withOpacity(0.15)
+                      : _getRankBackgroundColor(rank),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isMe
+                        ? const Color(0xFFF48FB1)
+                        : rankColor.withOpacity(0.3),
+                    width: isMe ? 1.5 : 1,
+                  ),
+                  boxShadow: isTop3
+                      ? [
+                          BoxShadow(
+                            color: rankColor.withOpacity(0.2),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Row(
+                  children: [
+                    // Rank
+                    Container(
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: rankColor.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: rankColor.withOpacity(0.5),
+                          width: 2,
+                        ),
+                      ),
+                      child: Text(
+                        '#$rank',
+                        style: TextStyle(
+                          color: rankColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // User Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            isMe
+                                ? 'You'
+                                : _formatWalletAddress(
+                                    entry['walletAddress'] ?? '',
+                                  ),
+                            style: TextStyle(
+                              color: isMe
+                                  ? const Color(0xFFF48FB1)
+                                  : Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              fontFamily: isMe ? null : 'monospace',
+                              letterSpacing: 0.5,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Score
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF48FB1).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFFF48FB1).withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Color(0xFFF48FB1),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatPoints(entry['totalRewards']),
+                            style: const TextStyle(
+                              color: Color(0xFFF48FB1),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );
   }
-}
 
-class _LeaderboardTile extends StatelessWidget {
-  final LeaderboardEntry entry;
-  final int index;
-
-  const _LeaderboardTile({required this.entry, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    final isTopThree = index < 3;
-    final rankColor = _getRankColor(index);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isTopThree
-            ? rankColor.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isTopThree
-              ? rankColor.withValues(alpha: 0.5)
-              : Colors.white.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Rank badge
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: rankColor, shape: BoxShape.circle),
-            child: Center(
-              child: isTopThree
-                  ? Icon(_getRankIcon(index), color: Colors.white, size: 20)
-                  : Text(
-                      '${entry.rank}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // User info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entry.username,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  entry.shortAddress,
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-
-          // Stats
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${entry.totalRewards}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${entry.totalSpins} spins',
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getRankColor(int index) {
-    switch (index) {
-      case 0:
-        return Colors.amber; // Gold
-      case 1:
-        return Colors.white70; // Silver
-      case 2:
-        return const Color(0xFFCD7F32); // Bronze (fixed color)
-      default:
-        return Colors.grey.shade700;
+  String _formatPoints(dynamic points) {
+    if (points == null) return '0';
+    // Use RegExp to separate thousands
+    try {
+      final number = double.parse(points.toString());
+      // If it's an integer like 100.0, show 100
+      if (number == number.truncateToDouble()) {
+        final intVal = number.truncate();
+        return intVal.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+      }
+      // If decimal, keep 2 decimal places max
+      return number.toStringAsFixed(
+        number.truncateToDouble() == number ? 0 : 2,
+      );
+    } catch (e) {
+      return points.toString();
     }
   }
 
-  IconData _getRankIcon(int index) {
-    switch (index) {
-      case 0:
-        return Icons.emoji_events; // Trophy
+  Color _getRankColor(int rank) {
+    switch (rank) {
       case 1:
-        return Icons.military_tech; // Medal
+        return const Color(0xFFFFD700); // Gold
       case 2:
-        return Icons.workspace_premium; // Badge
+        return const Color(0xFFC0C0C0); // Silver
+      case 3:
+        return const Color(0xFFCD7F32); // Bronze
       default:
-        return Icons.person;
+        return Colors.white;
     }
+  }
+
+  Color _getRankBackgroundColor(int rank) {
+    if (rank <= 3) {
+      return const Color(0xFF16213e);
+    }
+    return Colors.white.withValues(alpha: 0.03);
+  }
+
+  String _formatWalletAddress(String address) {
+    if (address.length < 10) return address;
+    return '${address.substring(0, 4)}...${address.substring(address.length - 4)}';
   }
 }

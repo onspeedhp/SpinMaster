@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wheeler/screens/leaderboard_page.dart';
 import 'package:wheeler/services/solana_service.dart';
+import 'package:wheeler/screens/custom_wheels_list_page.dart';
 import 'package:wheeler/services/auth_api.dart';
 import 'package:wheeler/utils/ui_utils.dart';
 
 class CustomDrawer extends StatelessWidget {
-  const CustomDrawer({super.key});
+  final String currentRoute;
+
+  const CustomDrawer({super.key, this.currentRoute = '/home'});
 
   @override
   Widget build(BuildContext context) {
@@ -162,8 +165,37 @@ class CustomDrawer extends StatelessWidget {
                       context,
                       icon: Icons.dashboard_rounded,
                       title: 'Home',
-                      onTap: () => Navigator.pop(context),
-                      isActive: true, // Assuming we are on home usually
+                      onTap: () {
+                        if (currentRoute == '/home') {
+                          Navigator.pop(context);
+                        } else {
+                          // Navigate to home and clear stack until home
+                          Navigator.of(
+                            context,
+                          ).pushNamedAndRemoveUntil('/home', (route) => false);
+                        }
+                      },
+                      isActive: currentRoute == '/home',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.pie_chart_rounded,
+                      title: 'My Wheels',
+                      onTap: () {
+                        if (currentRoute == '/custom_wheels') {
+                          Navigator.pop(context);
+                        } else {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const CustomWheelsListPage(),
+                            ),
+                          );
+                        }
+                      },
+                      isActive: currentRoute == '/custom_wheels',
                     ),
                     const SizedBox(height: 12),
                     _buildMenuItem(
@@ -171,13 +203,18 @@ class CustomDrawer extends StatelessWidget {
                       icon: Icons.leaderboard_rounded,
                       title: 'Leaderboards',
                       onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const LeaderboardPage(),
-                          ),
-                        );
+                        if (currentRoute == '/leaderboard') {
+                          Navigator.pop(context);
+                        } else {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const LeaderboardPage(),
+                            ),
+                          );
+                        }
                       },
+                      isActive: currentRoute == '/leaderboard',
                     ),
                   ],
                 ),

@@ -80,12 +80,14 @@ class Wheel {
   final String id;
   final String name;
   final List<SpinnerSegment> segments;
+  final List<String> history;
   final DateTime createdAt;
 
   Wheel({
     required this.id,
     required this.name,
     required this.segments,
+    this.history = const [],
     required this.createdAt,
   });
 
@@ -93,12 +95,14 @@ class Wheel {
     String? id,
     String? name,
     List<SpinnerSegment>? segments,
+    List<String>? history,
     DateTime? createdAt,
   }) {
     return Wheel(
       id: id ?? this.id,
       name: name ?? this.name,
       segments: segments ?? this.segments,
+      history: history ?? this.history,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -108,6 +112,7 @@ class Wheel {
       'id': id,
       'name': name,
       'segments': segments.map((segment) => segment.toJson()).toList(),
+      'history': history,
       'createdAt': createdAt.millisecondsSinceEpoch,
     };
   }
@@ -119,6 +124,8 @@ class Wheel {
       segments: (json['segments'] as List)
           .map((segment) => SpinnerSegment.fromJson(segment))
           .toList(),
+      history:
+          (json['history'] as List?)?.map((e) => e as String).toList() ?? [],
       createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt']),
     );
   }

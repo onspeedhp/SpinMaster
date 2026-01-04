@@ -111,15 +111,51 @@ export const db = {
   },
 
   // Leaderboard
-  async getLeaderboard(period = 'all_time', limit = 100) {
-    const query = `
-      SELECT id, wallet_address, username, total_rewards, total_spins
-      FROM users
-      ORDER BY total_rewards DESC
-      LIMIT $1
-    `;
-    const result = await pool.query(query, [limit]);
-    return result.rows;
+  async getLeaderboard(period = 'all-time', limit = 100) {
+    if (period === 'all-time') {
+      const query = `
+        SELECT id, wallet_address, username, total_rewards, total_spins
+        FROM users
+        ORDER BY total_rewards DESC
+        LIMIT $1
+      `;
+      const result = await pool.query(query, [limit]);
+      return result.rows;
+    } else {
+      // For daily/weekly, we need to aggregate from spins table
+      // Note: Assuming reward_value is numeric. If it's mixed string/number, this might need CAST or filtering.
+      // Based on spinController, we store what comes from config.
+      // Let's assume for leaderboard we only count numeric rewards or handle casting carefully.
+      // In a real app, we should have a separate numeric 'points' column.
+      // Here we will try to CAST and ignore non-numeric rewards if any.
+      
+      let interval = '1 DAY';
+      if (period === 'weekly') interval = '7 DAYS';
+      if (period === 'monthly') interval = '30 DAYS';
+
+      const query = `
+        SELECT 
+          u.id, 
+          u.wallet_address, 
+          u.username, 
+          SUM(
+            CASE 
+              WHEN s.reward_type IN ('points', 'jackpot', 'token') THEN s.reward_value 
+              ELSE 0 
+            END
+          ) as total_rewards,
+          COUNT(s.id) as total_spins
+        FROM spins s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.created_at >= NOW() - $1::INTERVAL
+        GROUP BY u.id
+        ORDER BY total_rewards DESC
+        LIMIT $2
+      `;
+      
+      const result = await pool.query(query, [interval, limit]);
+      return result.rows;
+    }
   },
 
   // Configuration

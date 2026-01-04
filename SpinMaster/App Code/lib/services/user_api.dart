@@ -15,4 +15,14 @@ class UserApi {
     final data = ApiService.handleResponse(response);
     return data['spinsBalance'] ?? 0;
   }
+
+  /// Get leaderboard
+  /// period: 'daily', 'weekly', 'all-time' (default)
+  static Future<List<dynamic>> getLeaderboard({
+    String period = 'all-time',
+  }) async {
+    final response = await ApiService.get('/api/leaderboard/$period');
+    final data = ApiService.handleResponse(response);
+    return data['leaderboard'] ?? [];
+  }
 }

@@ -559,7 +559,8 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
   Widget build(BuildContext context) {
     return Consumer<WheelProvider>(
       builder: (context, wheelProvider, child) {
-        final currentWheel = wheelProvider.currentWheel;
+        final currentWheel = wheelProvider.officialWheel;
+
         if (currentWheel == null) {
           return Scaffold(
             appBar: AppBar(
@@ -567,7 +568,7 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
               backgroundColor: Colors.blue[800],
               foregroundColor: Colors.white,
             ),
-            body: const Center(child: Text('No wheels available')),
+            body: const Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -609,8 +610,21 @@ class _SpinnerHomePageState extends State<SpinnerHomePage> {
             elevation: 0,
             centerTitle: true,
             foregroundColor: const Color(0xFFF48FB1),
+            actions: [
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(
+                    Icons.menu_rounded,
+                    size: 32,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => Scaffold.of(context).openEndDrawer(),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
-          drawer: CustomDrawer(),
+          endDrawer: const CustomDrawer(currentRoute: '/home'),
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
